@@ -7,13 +7,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.teamseven.hms.backend.booking.dto.*;
 import org.teamseven.hms.backend.booking.entity.*;
-import org.teamseven.hms.backend.catalog.dto.ServiceOverview;
-import org.teamseven.hms.backend.catalog.service.CatalogService;
+import org.teamseven.hms.backend.client.CatalogClient;
+import org.teamseven.hms.backend.client.ServiceOverview;
 import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
 import org.teamseven.hms.backend.user.entity.Patient;
 import org.teamseven.hms.backend.user.entity.PatientRepository;
 import org.teamseven.hms.backend.user.service.PatientService;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.*;
@@ -33,7 +34,7 @@ public class BookingService {
     // or other services of different domains.
     @Autowired private PatientRepository patientRepository;
 
-    @Autowired private CatalogService catalogService;
+    @Autowired private CatalogClient catalogClient;
 
     @Autowired private PatientService patientService;
 
@@ -88,7 +89,7 @@ public class BookingService {
 
 
     private final Function<Booking, BookingOverview> getBookingOverview = it -> {
-        ServiceOverview serviceOverview = catalogService.getServiceOverview(it.getServiceId());
+        ServiceOverview serviceOverview = catalogClient.getServiceOverview(it.getServiceId());
 
         return BookingOverview
                 .builder()
@@ -111,7 +112,7 @@ public class BookingService {
     public BookingInfoResponse getBookingInfo(UUID id) {
         Booking booking = getBookingById(id);
 
-        ServiceOverview serviceOverview = catalogService.getServiceOverview(booking.getServiceId());
+        ServiceOverview serviceOverview = catalogClient.getServiceOverview(booking.getServiceId());
 
         PatientProfileOverview patientProfileOverview = patientService.getPatientProfile(booking.getPatientId());
 
@@ -159,7 +160,7 @@ public class BookingService {
 
     @Transactional
     public Booking reserveSlot(AddBookingRequest bookingRequest) {
-        ServiceOverview serviceOverview = catalogService.getServiceOverview(bookingRequest.getServiceId());
+        ServiceOverview serviceOverview = catalogClient.getServiceOverview(bookingRequest.getServiceId());
         Booking booked = new Booking();
         if (Objects.equals(bookingRequest.getType(), BookingType.APPOINTMENT)) {
             if(bookingExists(bookingRequest.getAppointmentDate(), bookingRequest.getSelectedSlot(), bookingRequest.getServiceId())) {

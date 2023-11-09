@@ -1,8 +1,4 @@
 spring:
-  data:
-    mongodb:
-      uri: mongodb://MongoECSUser:Helucipass745@ecsmongodb.cluster-cqunz6ixnkor.ap-southeast-1.docdb.amazonaws.com:27017/healdb?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false
-      uuid-representation: standard
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:

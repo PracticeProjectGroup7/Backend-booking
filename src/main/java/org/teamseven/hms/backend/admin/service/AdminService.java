@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.teamseven.hms.backend.admin.dto.*;
 import org.teamseven.hms.backend.booking.entity.Booking;
 import org.teamseven.hms.backend.booking.entity.BookingRepository;
-import org.teamseven.hms.backend.catalog.dto.CreateDoctorService;
-import org.teamseven.hms.backend.catalog.service.CatalogService;
+import org.teamseven.hms.backend.client.CatalogClient;
+import org.teamseven.hms.backend.client.CreateDoctorService;
 import org.teamseven.hms.backend.user.Role;
 import org.teamseven.hms.backend.user.User;
 import org.teamseven.hms.backend.user.UserRepository;
@@ -44,7 +44,7 @@ public class AdminService  {
     private TransactionTemplate transactionTemplate;
 
     @Autowired
-    private CatalogService catalogService;
+    private CatalogClient catalogClient;
 
     @Autowired
     private PatientRepository patientRepository;
@@ -127,7 +127,7 @@ public class AdminService  {
                 if (request.getRole() == Role.DOCTOR) {
                     Doctor doctor = createDoctorAccount(createdUser, request);
                     Doctor createdDoctor = doctorRepository.save(doctor);
-                    catalogService.createNewService(
+                    catalogClient.createNewService(
                             CreateDoctorService.builder()
                                     .doctorId(createdDoctor.getDoctorId())
                                     .name(createdUser.getName())
