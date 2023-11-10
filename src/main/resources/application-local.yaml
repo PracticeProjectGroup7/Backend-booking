@@ -1,6 +1,5 @@
 spring:
   address: localhost
-
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
@@ -26,6 +25,13 @@ client:
     overview-path: "/api/v1/available-services/{service-id}"
     overview-by-doctor-id-path: "/api/v1/available-services/doctors/{doctor-id}"
     create-doctor-path: "/api/v1/available-services/doctors"
+  user:
+    base-url: "http://localhost:8080"
+    get-patient-by-id-path: "/api/v1/patients/{patient-id}"
+    patient-by-uuids-path: "/api/v1/patients/info"
 
 sec-env-conf:
-  enable-login-guard: false
+  enable-login-guard: true
+
+server:
+  port: 8082
