@@ -10,8 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.teamseven.hms.backend.booking.entity.Booking;
 import org.teamseven.hms.backend.booking.entity.TestRepository;
 import org.teamseven.hms.backend.booking.entity.TestStatus;
-import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
-import org.teamseven.hms.backend.user.service.PatientService;
+import org.teamseven.hms.backend.client.PatientProfileOverview;
+import org.teamseven.hms.backend.client.UserClient;
 
 import java.text.ParseException;
 import java.util.List;
@@ -30,7 +30,7 @@ public class LabTestServiceTest {
     private BookingService bookingService;
 
     @Mock
-    private PatientService patientService;
+    private UserClient userClient;
 
     @InjectMocks
     private LabTestService labTestService;
@@ -46,7 +46,7 @@ public class LabTestServiceTest {
                         )
                 );
 
-        when(patientService.getByUUIDs(any())).thenReturn(
+        when(userClient.getByUUIDs(any())).thenReturn(
                 List.of(
                         PatientProfileOverview.builder()
                                 .patientName("test name")
@@ -57,7 +57,7 @@ public class LabTestServiceTest {
 
         labTestService.getTestAppointments(1, 10);
         verify(bookingService).findUpcomingTestBookings(any());
-        verify(patientService).getByUUIDs(List.of(UUID.fromString("8a61e51b-7930-4549-b273-a9143abde3e3")));
+        verify(userClient).getByUUIDs(List.of(UUID.fromString("8a61e51b-7930-4549-b273-a9143abde3e3")));
     }
 
     private List<Booking> getMockBookingList() throws ParseException {

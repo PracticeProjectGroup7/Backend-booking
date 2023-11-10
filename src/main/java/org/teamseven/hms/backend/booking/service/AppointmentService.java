@@ -12,9 +12,9 @@ import org.teamseven.hms.backend.booking.dto.UpdateAppointmentRequest;
 import org.teamseven.hms.backend.booking.entity.AppointmentRepository;
 import org.teamseven.hms.backend.booking.entity.Booking;
 import org.teamseven.hms.backend.client.CatalogClient;
+import org.teamseven.hms.backend.client.PatientProfileOverview;
 import org.teamseven.hms.backend.client.ServiceOverview;
-import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
-import org.teamseven.hms.backend.user.service.PatientService;
+import org.teamseven.hms.backend.client.UserClient;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class AppointmentService {
     @Autowired private AppointmentRepository repository;
 
-    @Autowired private PatientService patientService;
+    @Autowired private UserClient userClient;
 
     @Autowired private BookingService bookingService;
 
@@ -58,7 +58,7 @@ public class AppointmentService {
 
         List<UUID> patientIdList = bookingPage.getContent().stream().map(Booking::getPatientId).toList();
 
-        Map<UUID, PatientProfileOverview> patientProfiles = patientService.getByUUIDs(
+        Map<UUID, PatientProfileOverview> patientProfiles = userClient.getByUUIDs(
                 patientIdList
         ).stream().collect(Collectors.toMap(PatientProfileOverview::getPatientId, item -> item));
 

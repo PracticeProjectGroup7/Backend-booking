@@ -10,12 +10,9 @@ import org.springframework.data.domain.PageRequest;
 import org.teamseven.hms.backend.booking.dto.*;
 import org.teamseven.hms.backend.booking.entity.*;
 import org.teamseven.hms.backend.client.CatalogClient;
+import org.teamseven.hms.backend.client.PatientProfileOverview;
 import org.teamseven.hms.backend.client.ServiceOverview;
-import org.teamseven.hms.backend.user.User;
-import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
-import org.teamseven.hms.backend.user.entity.Patient;
-import org.teamseven.hms.backend.user.entity.PatientRepository;
-import org.teamseven.hms.backend.user.service.PatientService;
+import org.teamseven.hms.backend.client.UserClient;
 
 import java.text.ParseException;
 import java.util.List;
@@ -34,13 +31,10 @@ public class BookingServiceTest {
     private BookingRepository bookingRepository;
 
     @Mock
-    private PatientRepository patientRepository;
-
-    @Mock
     private CatalogClient catalogClient;
 
     @Mock
-    private PatientService patientService;
+    private UserClient userClient;
 
     @InjectMocks
     private BookingService bookingService;
@@ -48,7 +42,7 @@ public class BookingServiceTest {
 
     @Test
     public void testGetBookingHistory_patientNotFound_assertThrowsException() {
-        when(patientRepository.findById(any())).thenReturn(Optional.empty());
+        when(userClient.getPatientProfile(any())).thenReturn(null);
 
         assertThrows(NoSuchElementException.class, () -> {
             bookingService.getBookingHistory(UUID.randomUUID(), 1, 10);
@@ -57,14 +51,8 @@ public class BookingServiceTest {
 
     @Test
     public void testGetBookingHistory_patientFound_returnFormattedDataFromRepository() throws ParseException {
-        when(patientRepository.findById(any()))
-                .thenReturn(
-                        Optional.of(
-                                Patient.builder().user(
-                                        User.builder().firstName("John").lastName("Doe").build()
-                                ).build()
-                        )
-                );
+        when(userClient.getPatientProfile(any()))
+                .thenReturn(PatientProfileOverview.builder().patientName("John Doe").build());
 
         when(bookingRepository.findPatientBookingsWithPagination(any(), any()))
                         .thenReturn(
@@ -136,7 +124,7 @@ public class BookingServiceTest {
         when(bookingRepository.findById(any())).
                 thenReturn(Optional.of(getAppointmentBooking()));
 
-        when(patientService.getPatientProfile(any()))
+        when(userClient.getPatientProfile(any()))
                 .thenReturn(
                         PatientProfileOverview.builder()
                                 .patientName("John Doe")
@@ -180,7 +168,7 @@ public class BookingServiceTest {
                                 .build()
                 );
 
-        when(patientService.getPatientProfile(any()))
+        when(userClient.getPatientProfile(any()))
                 .thenReturn(
                         PatientProfileOverview.builder()
                                 .patientName("John Doe")

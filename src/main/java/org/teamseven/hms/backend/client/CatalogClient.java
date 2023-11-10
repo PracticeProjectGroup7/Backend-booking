@@ -59,22 +59,4 @@ public class CatalogClient {
             throw new RuntimeException("Internal server error.");
         }
     }
-
-    public UUID createNewService(CreateDoctorService createDoctorService) {
-        String url = config.getBaseUrl() + config.getCreateDoctorPath();
-        try {
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(RequestBody.create(MAPPER.writeValueAsString(createDoctorService), JSON))
-                    .build();
-            Response response = okHttpClient.newCall(request).execute();
-            assert response.body() != null;
-
-            return MAPPER.readValue(response.body().string(), new TypeReference<ResponseWrapper.Success<UUID>>() {})
-                    .getData();
-        } catch (Exception e) {
-            Logger.getAnonymousLogger().info("caught exception " + e);
-            throw new RuntimeException("Internal server error.");
-        }
-    }
 }
