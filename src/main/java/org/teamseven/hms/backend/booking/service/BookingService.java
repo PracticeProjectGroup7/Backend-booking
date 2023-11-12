@@ -7,12 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.teamseven.hms.backend.booking.dto.*;
 import org.teamseven.hms.backend.booking.entity.*;
-import org.teamseven.hms.backend.catalog.dto.ServiceOverview;
-import org.teamseven.hms.backend.catalog.service.CatalogService;
-import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
-import org.teamseven.hms.backend.user.entity.Patient;
-import org.teamseven.hms.backend.user.entity.PatientRepository;
-import org.teamseven.hms.backend.user.service.PatientService;
+import org.teamseven.hms.backend.client.CatalogClient;
+import org.teamseven.hms.backend.client.PatientProfileOverview;
+import org.teamseven.hms.backend.client.ServiceOverview;
+import org.teamseven.hms.backend.client.UserClient;
 
 import java.time.LocalDate;
 import java.math.BigDecimal;
@@ -27,15 +25,9 @@ public class BookingService {
     private static final String APPOINTMENT_DESCRIPTION_PREFIX = "Appointment with Dr. ";
 
     @Autowired private BookingRepository bookingRepository;
+    @Autowired private CatalogClient catalogClient;
 
-    // TODO sheila: decouple booking service from patient / user DAO in favour of convenience when
-    // migrating to microservices. make sure that @service(s) either only depend on other controllers
-    // or other services of different domains.
-    @Autowired private PatientRepository patientRepository;
-
-    @Autowired private CatalogService catalogService;
-
-    @Autowired private PatientService patientService;
+    @Autowired private UserClient userClient;
 
     @Autowired private AppointmentRepository appointmentRepository;
 
@@ -67,12 +59,13 @@ public class BookingService {
     }
 
     private String getPatientName(UUID patientId) {
-        Optional<Patient> patient = patientRepository.findById(patientId);
-        if (patient.isEmpty()) {
+        PatientProfileOverview patientProfileOverview = userClient.getPatientProfile(patientId);
+
+        if (patientProfileOverview == null) {
             throw new NoSuchElementException("Something went wrong when fetching patient records");
         }
 
-        return patient.get().getUser().getName();
+        return patientProfileOverview.getPatientName();
     }
 
     private final Function<Booking, String[]> getSlots = it ->
@@ -88,7 +81,7 @@ public class BookingService {
 
 
     private final Function<Booking, BookingOverview> getBookingOverview = it -> {
-        ServiceOverview serviceOverview = catalogService.getServiceOverview(it.getServiceId());
+        ServiceOverview serviceOverview = catalogClient.getServiceOverview(it.getServiceId());
 
         return BookingOverview
                 .builder()
@@ -111,9 +104,9 @@ public class BookingService {
     public BookingInfoResponse getBookingInfo(UUID id) {
         Booking booking = getBookingById(id);
 
-        ServiceOverview serviceOverview = catalogService.getServiceOverview(booking.getServiceId());
+        ServiceOverview serviceOverview = catalogClient.getServiceOverview(booking.getServiceId());
 
-        PatientProfileOverview patientProfileOverview = patientService.getPatientProfile(booking.getPatientId());
+        PatientProfileOverview patientProfileOverview = userClient.getPatientProfile(booking.getPatientId());
 
         PatientDataBookingDetails patientDetails = PatientDataBookingDetails.builder()
                 .dateOfBirth(patientProfileOverview.getDateOfBirth())
@@ -159,7 +152,7 @@ public class BookingService {
 
     @Transactional
     public Booking reserveSlot(AddBookingRequest bookingRequest) {
-        ServiceOverview serviceOverview = catalogService.getServiceOverview(bookingRequest.getServiceId());
+        ServiceOverview serviceOverview = catalogClient.getServiceOverview(bookingRequest.getServiceId());
         Booking booked = new Booking();
         if (Objects.equals(bookingRequest.getType(), BookingType.APPOINTMENT)) {
             if(bookingExists(bookingRequest.getAppointmentDate(), bookingRequest.getSelectedSlot(), bookingRequest.getServiceId())) {
@@ -248,5 +241,48 @@ public class BookingService {
                 LocalDate.now().toString(),
                 pageable
         );
+    }
+
+    @Transactional
+    public boolean modifyBooking(ModifyBookingRequest modifyBookingRequest) {
+        Optional<Booking> existingBooking = bookingRepository
+                .findByServiceIdAndReservedDateAndSlot(
+                        modifyBookingRequest.getServiceId(),
+                        modifyBookingRequest.getNewReservedDate(),
+                        modifyBookingRequest.getNewSlot()
+                );
+        if(existingBooking.isPresent()) {
+            throw new IllegalStateException("Unable to modify booking, booking already exists!");
+        }
+
+        return bookingRepository
+                .updateBooking(
+                        modifyBookingRequest.getPatientId(),
+                        modifyBookingRequest.getServiceId(),
+                        modifyBookingRequest.getOldReservedDate(),
+                        modifyBookingRequest.getOldSlot(),
+                        modifyBookingRequest.getNewReservedDate(),
+                        modifyBookingRequest.getNewSlot()
+                ) == 1;
+    }
+
+    @Transactional
+    public boolean modifyTest(ModifyTestRequest modifyTestRequest) {
+        Optional<Booking> existingTest = bookingRepository
+                .checkTestExists(
+                        modifyTestRequest.getNewReservedDate(),
+                        modifyTestRequest.getServiceId()
+                );
+        if(existingTest.isPresent()) {
+            throw new IllegalStateException("Unable to modify test, test already exists!");
+        }
+
+        return bookingRepository
+                .updateTest(
+                        modifyTestRequest.getPatientId(),
+                        modifyTestRequest.getServiceId(),
+                        modifyTestRequest.getOldReservedDate(),
+                        modifyTestRequest.getNewReservedDate()
+                ) == 1;
     }
 }

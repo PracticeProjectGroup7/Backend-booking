@@ -12,7 +12,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.teamseven.hms.backend.config.JwtService;
 import org.teamseven.hms.backend.shared.exception.UnauthorizedAccessException;
-import org.teamseven.hms.backend.user.Role;
 
 @Aspect
 @Component

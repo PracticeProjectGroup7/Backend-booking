@@ -20,9 +20,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.teamseven.hms.backend.booking.controller.BookingController;
 import org.teamseven.hms.backend.config.JwtService;
 import org.teamseven.hms.backend.shared.exception.UnauthorizedAccessException;
-import org.teamseven.hms.backend.user.Role;
-import org.teamseven.hms.backend.user.service.UserService;
-
 import java.security.Key;
 import java.util.Map;
 import java.util.UUID;
@@ -38,15 +35,12 @@ public class PatientBookingAccessAspectTest {
     @Mock
     private JwtService jwtService;
 
-    @Mock
-    private UserService userService;
-
     @InjectMocks
     PatientBookingAccessAspect aspect;
 
     @BeforeEach
     public void setUp() {
-        Mockito.reset(jwtService, userService);
+        Mockito.reset(jwtService);
     }
 
     @Test

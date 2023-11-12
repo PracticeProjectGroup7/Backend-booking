@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.List;
 
 // filterChain - Chain of Responsibility Design Pattern
 @Component
@@ -21,7 +23,6 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -39,12 +40,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         userEmail = jwtService.extractUsername(jwt);
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt)) {
+                var extractClaim = jwtService.extractAllClaims(jwt);
+                request.setAttribute("email", userEmail);
+                request.setAttribute("userId", extractClaim.get("userId"));
+                request.setAttribute("ROLE", extractClaim.get("ROLE"));
+                request.setAttribute("roleId", extractClaim.get("roleId"));
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
+                        userEmail,
                         null,
-                        userDetails.getAuthorities()
+                        List.of(new SimpleGrantedAuthority((String) extractClaim.get("ROLE")))
                 );
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
@@ -52,11 +58,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        var extractClaim = jwtService.extractAllClaims(jwt);
-        request.setAttribute("email", userEmail);
-        request.setAttribute("userId", extractClaim.get("userId"));
-        request.setAttribute("ROLE", extractClaim.get("ROLE"));
-        request.setAttribute("roleId", extractClaim.get("roleId"));
         filterChain.doFilter(request, response);
     }
 }

@@ -11,10 +11,10 @@ import org.springframework.data.domain.PageRequest;
 import org.teamseven.hms.backend.booking.entity.Appointment;
 import org.teamseven.hms.backend.booking.entity.AppointmentStatus;
 import org.teamseven.hms.backend.booking.entity.Booking;
-import org.teamseven.hms.backend.catalog.dto.ServiceOverview;
-import org.teamseven.hms.backend.catalog.service.CatalogService;
-import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
-import org.teamseven.hms.backend.user.service.PatientService;
+import org.teamseven.hms.backend.client.CatalogClient;
+import org.teamseven.hms.backend.client.PatientProfileOverview;
+import org.teamseven.hms.backend.client.ServiceOverview;
+import org.teamseven.hms.backend.client.UserClient;
 
 import java.text.ParseException;
 import java.util.List;
@@ -26,13 +26,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class AppointmentServiceTest {
     @Mock
-    private CatalogService catalogService;
+    private CatalogClient catalogClient;
 
     @Mock
     private BookingService bookingService;
 
     @Mock
-    private PatientService patientService;
+    private UserClient userClient;
 
     @InjectMocks
     private AppointmentService appointmentService;
@@ -44,7 +44,7 @@ public class AppointmentServiceTest {
         when(request.getAttribute("roleId")).thenReturn("00b063be-5002-40a8-9073-54026c0615b2");
 
         UUID mockServiceId = UUID.fromString("5cd46763-5869-4dec-bec6-588c55398bff");
-        when(catalogService.getServiceOverviewByDoctorId(any()))
+        when(catalogClient.getServiceOverviewByDoctorId(any()))
                 .thenReturn(
                         ServiceOverview.builder().serviceId(mockServiceId).build()
                 );
@@ -58,7 +58,7 @@ public class AppointmentServiceTest {
                         )
                 );
 
-        when(patientService.getByUUIDs(any())).thenReturn(
+        when(userClient.getByUUIDs(any())).thenReturn(
                 List.of(
                         PatientProfileOverview.builder()
                                 .patientName("test name")
@@ -68,9 +68,9 @@ public class AppointmentServiceTest {
         );
 
         appointmentService.getDoctorSlots(request, 1, 10);
-        verify(catalogService).getServiceOverviewByDoctorId(UUID.fromString("00b063be-5002-40a8-9073-54026c0615b2"));
+        verify(catalogClient).getServiceOverviewByDoctorId(UUID.fromString("00b063be-5002-40a8-9073-54026c0615b2"));
         verify(bookingService).findUpcomingServiceBookings(eq(mockServiceId), any());
-        verify(patientService).getByUUIDs(List.of(UUID.fromString("8a61e51b-7930-4549-b273-a9143abde3e3")));
+        verify(userClient).getByUUIDs(List.of(UUID.fromString("8a61e51b-7930-4549-b273-a9143abde3e3")));
     }
 
     private List<Booking> getMockBookingList() throws ParseException {

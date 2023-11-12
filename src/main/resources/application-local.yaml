@@ -1,10 +1,5 @@
 spring:
   address: localhost
-  data:
-    mongodb:
-      uri: mongodb://user:pass@localhost:27017/healdb?authSource=admin
-      uuid-representation: standard
-
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
@@ -24,11 +19,19 @@ spring:
     password: 123456
     baselineOnMigrate: true
 
-logging:
-  level:
-    org:
-      springframework:
-        data:
-          mongodb:
-            core:
-              MongoTemplate: DEBUG
+client:
+  catalog:
+    base-url: "http://localhost:8081"
+    overview-path: "/api/v1/available-services/{service-id}"
+    overview-by-doctor-id-path: "/api/v1/available-services/doctors/{doctor-id}"
+    create-doctor-path: "/api/v1/available-services/doctors"
+  user:
+    base-url: "http://localhost:8080"
+    get-patient-by-id-path: "/api/v1/patients/{patient-id}"
+    patient-by-uuids-path: "/api/v1/patients/info"
+
+sec-env-conf:
+  enable-login-guard: true
+
+server:
+  port: 8082

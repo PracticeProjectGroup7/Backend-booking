@@ -14,7 +14,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/v1/services/")

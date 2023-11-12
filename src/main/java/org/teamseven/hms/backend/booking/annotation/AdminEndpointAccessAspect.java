@@ -15,15 +15,15 @@ import org.teamseven.hms.backend.shared.exception.UnauthorizedAccessException;
 
 @Aspect
 @Component
-public class DoctorAppointmentEndpointAccessAspect {
+public class AdminEndpointAccessAspect {
     @Autowired
     private JwtService jwtService;
 
     @VisibleForTesting
-    @Around("@annotation(doctorAppointmentEndpointAccessValidated)")
+    @Around("@annotation(adminEndpointAccessValidated)")
     protected Object validateAccessAllowed(
             ProceedingJoinPoint pjp,
-            DoctorAppointmentEndpointAccessValidated doctorAppointmentEndpointAccessValidated
+            AdminEndpointAccessValidated adminEndpointAccessValidated
     ) throws Throwable{
         HttpServletRequest request = (
                 (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()
@@ -31,8 +31,10 @@ public class DoctorAppointmentEndpointAccessAspect {
         String jwtToken = getJwtToken(request);
         Claims jwtClaims = jwtService.extractAllClaims(jwtToken);
         Role role = Role.valueOf(jwtClaims.get("ROLE", String.class));
-
-        if (role == Role.DOCTOR) {
+        if (role == Role.ADMIN) {
+            return pjp.proceed();
+        }
+        if(adminEndpointAccessValidated.isReceptionistAccessAllowed() && role == Role.STAFF) {
             return pjp.proceed();
         }
         throw new UnauthorizedAccessException();

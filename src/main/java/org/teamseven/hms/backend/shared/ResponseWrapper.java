@@ -1,11 +1,13 @@
 package org.teamseven.hms.backend.shared;
 
 import jakarta.annotation.Nullable;
+import lombok.NoArgsConstructor;
 
 public sealed class ResponseWrapper {
     private ResponseWrapper() {
     }
 
+    @NoArgsConstructor(force = true)
     public static final class Success<T> extends ResponseWrapper {
         private final @Nullable T data;
 

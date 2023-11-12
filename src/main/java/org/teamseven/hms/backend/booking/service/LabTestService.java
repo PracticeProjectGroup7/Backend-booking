@@ -9,8 +9,8 @@ import org.teamseven.hms.backend.booking.dto.TestAppointmentSlotPaginationRespon
 import org.teamseven.hms.backend.booking.entity.Booking;
 import org.teamseven.hms.backend.booking.entity.TestRepository;
 import org.teamseven.hms.backend.booking.entity.TestStatus;
-import org.teamseven.hms.backend.user.dto.PatientProfileOverview;
-import org.teamseven.hms.backend.user.service.PatientService;
+import org.teamseven.hms.backend.client.PatientProfileOverview;
+import org.teamseven.hms.backend.client.UserClient;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class LabTestService {
 
     @Autowired private BookingService bookingService;
 
-    @Autowired private PatientService patientService;
+    @Autowired private UserClient userClient;
 
     public boolean updateTestStatus(UUID testId, String result, TestStatus newStatus) {
         return testRepository.setTestStatus(newStatus, result,  testId) == 1;
@@ -35,11 +35,12 @@ public class LabTestService {
                 Pageable.ofSize(pageSize).withPage(zeroBasedIdxPage)
         );
 
-        List<UUID> patientIdList = bookings.getContent().stream().map(Booking::getPatientId).toList();
+        List<UUID> patientIdList = bookings.getContent()
+                .stream().map(Booking::getPatientId).toList();
 
-        Map<UUID, PatientProfileOverview> patientProfiles = patientService.getByUUIDs(
-                patientIdList
-        ).stream().collect(Collectors.toMap(PatientProfileOverview::getPatientId, item -> item));
+        Map<UUID, PatientProfileOverview> patientProfiles = userClient.getByUUIDs(patientIdList)
+                .stream()
+                .collect(Collectors.toMap(PatientProfileOverview::getPatientId, item -> item));
 
         return TestAppointmentSlotPaginationResponse
                 .builder()
